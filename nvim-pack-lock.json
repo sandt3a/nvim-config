@@ -1,0 +1,12 @@
+{
+  "plugins": {
+    "fzf-lua": {
+      "rev": "02bc882f208f3481aa959dbbee8ce5edad2fd8b2",
+      "src": "https://github.com/ibhagwan/fzf-lua"
+    },
+    "mini.comment": {
+      "rev": "27a29d6b949b9497f80a0a03421e89fed71d8c37",
+      "src": "https://github.com/echasnovski/mini.comment"
+    }
+  }
+}
