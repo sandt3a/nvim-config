@@ -143,7 +143,7 @@ local CPPFLAGS = '-g -std=c++23 -Wall -Wextra -Wconversion'
 -- 好处是源文件没改动时 make 直接 2ms 返回 "up to date"，省掉一次 ~1.6s 的
 -- bits/stdc++.h 重编；改了才编。CXXFLAGS 是命令行变量，不依赖 shell 语法，
 -- 所以 fish / bash 下都一样。
--- 注意：<C-F9> 是无条件 g++ -O2（不经过 make）—— 它要是也走 make，源文件没改时
+-- 注意：<C-F9> 是无条件 -O2 编译（C 用 gcc，C++ 用 g++，不经过 make）—— 它要是也走 make，源文件没改时
 -- 会被跳过，结果你计时的是上一次 -O0 的产物，那才是真的坑。
 o.makeprg = 'make %:t:r CXXFLAGS="' .. CPPFLAGS .. '"'
 

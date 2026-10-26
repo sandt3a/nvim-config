@@ -212,14 +212,20 @@ end
 --  三、编译 & 运行
 -- ════════════════════════════════════════════════════════════════════
 
-local FLAGS_DEBUG = '-g -std=c++23 -Wall -Wextra -Wconversion'
-local FLAGS_FAST  = '-O2 -std=c++23'
+local FLAGS_DEBUG  = '-g -std=c++23 -Wall -Wextra -Wconversion'
+local FLAGS_FAST   = '-O2 -std=c++23'   -- C++
+local FLAGS_FAST_C = '-O2'              -- C：不指定 -std，跟随 gcc 默认（各版本都认识）
 
 local function stem() return vim.fn.expand('%:t:r') end   -- a.cpp → a
 local function src()  return vim.fn.expand('%:t')   end   -- a.cpp → a.cpp
 
+-- .c 用 gcc，.cpp/.cc/.cxx 用 g++
+local function compiler()
+  return vim.fn.expand('%:e') == 'c' and 'gcc' or 'g++'
+end
+
 local function compile(flags)
-  return 'g++ ' .. src() .. ' -o ' .. stem() .. ' ' .. flags
+  return compiler() .. ' ' .. src() .. ' -o ' .. stem() .. ' ' .. flags
 end
 
 -- F10 用：无条件重编一次带 -g 的。
@@ -232,8 +238,14 @@ local function debug_build()
 end
 
 -- 只运行，不编译：编译是 F9 / <C-F9> 的事，混在一起会把反馈时间拉长
+-- .py 直接 python3 a.py；C/C++ 跑编译好的 ./a。input 为真时都从同名 .in 读输入
 local function run_with(input)
-  local cmd = 'time ./' .. stem()
+  local cmd
+  if vim.fn.expand('%:e') == 'py' then
+    cmd = 'time python3 ' .. src()
+  else
+    cmd = 'time ./' .. stem()
+  end
   if input then cmd = cmd .. ' < ' .. input end
   return cmd
 end
@@ -245,11 +257,26 @@ end
 map('<F2>',   function() M.swap_template() end,
     '换模板（multicase ⇄ singlecase）')
 map('<F5>',   function() M.sh(run_with()) end,
-    '运行（底部终端，不编译）')
+    '运行（C/C++ 或 Python，不编译）')
 map('<F8>',   function() M.sh(run_with(stem() .. '.in')) end,
-    '读 .in 运行（不编译）')
-map('<C-F9>', function() M.sh(compile(FLAGS_FAST)) end,
-    '编译 -O2（赛时测速度）')
+    '读同名 .in 运行（C/C++ 或 Python，不编译）')
+-- 无条件 -O2 编译当前 C/C++ 文件（不经过 make，源文件没改也会重编）
+-- 两个键名都要映射：终端把 Ctrl-F9 按传统 xterm 序列 CSI 20;5~ 发过来时，
+-- nvim 解出来的是 <F33>（F25~F36 = Ctrl-F1~F12）；只有支持 kitty 键盘协议的
+-- 终端才会直接给 <C-F9>。只映射 <C-F9> 的话，大多数终端（含 Windows Terminal）
+-- 按下去什么都不会发生。
+local function compile_o2()
+  local ext = vim.fn.expand('%:e')
+  if ext == 'c' then
+    M.sh(compile(FLAGS_FAST_C))
+  elseif ext == 'cpp' or ext == 'cc' or ext == 'cxx' then
+    M.sh(compile(FLAGS_FAST))
+  end
+end
+
+for _, lhs in ipairs({ '<C-F9>', '<F33>' }) do
+  map(lhs, compile_o2, '编译 -O2（C 用 gcc，C++ 用 g++）')
+end
 map('<F10>',  function()
   M.sh(debug_build() .. ' && gdb -q ./' .. stem(), { focus = true })
 end, 'gdb 调试（每次都带 -g 重编，保证符号是当前源码的）')
