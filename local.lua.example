@@ -1,5 +1,1 @@
--- 复制此文件为 local.lua，再填写这台电脑的模板目录。
--- local.lua 不纳入 Git，两台电脑可以使用不同的路径。
--- 目录内需有 multicase.cpp 和 singlecase.cpp；模板文件自行迁移。
--- 支持 ~/ 开头的路径，也可以填写 WSL 内的绝对路径。
 vim.g.cp_template_dir = '~/cp-code/template'
